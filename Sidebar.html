@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Journal d'activité</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Google Sans", Roboto, Arial, sans-serif;
+        font-size: 13px;
+        color: #1a1a1a;
+        background: #f8f9fa;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #1a3a5c 0%, #2d6099 100%);
+        color: #fff;
+        padding: 12px 14px;
+      }
+      .header .greeting {
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .header .date {
+        font-size: 12px;
+        opacity: 0.9;
+        margin-top: 2px;
+      }
+
+      .body {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid #dde1e6;
+        border-radius: 8px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .section-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: #1a3a5c;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .todo-add {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .todo-add > input[type="text"] {
+        flex: 1 1 100%;
+      }
+
+      .todo-time {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: 0 0 auto;
+      }
+
+      .todo-time-editor {
+        display: none;
+      }
+
+      .todo-time-editor.visible {
+        display: flex;
+      }
+
+      .todo-time select {
+        width: auto;
+        min-width: 52px;
+        padding: 5px 6px;
+        font-size: 12px;
+      }
+
+      .todo-time .sep {
+        color: #6f7780;
+        font-size: 12px;
+      }
+
+      .todo-time-badge {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid #d8e0ea;
+        border-radius: 999px;
+        padding: 2px 7px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #1a3a5c;
+        background: #eef4fb;
+      }
+
+      .todo-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .todo-item {
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        gap: 6px 8px;
+        align-items: center;
+        border: 1px solid #e8ebef;
+        border-radius: 6px;
+        padding: 6px;
+        background: #fbfcfd;
+      }
+      .todo-item.done .todo-text {
+        text-decoration: line-through;
+        color: #6f7780;
+      }
+      .todo-text {
+        min-width: 0;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .todo-item .todo-time {
+        margin-right: 0;
+      }
+
+      .todo-controls {
+        grid-column: 2;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-end;
+      }
+
+      .mini-btn {
+        border: 1px solid #d0d7de;
+        border-radius: 5px;
+        background: #fff;
+        color: #2f3b49;
+        font-size: 11px;
+        padding: 4px 6px;
+        cursor: pointer;
+      }
+      .mini-btn:hover {
+        background: #f2f5f8;
+      }
+
+      .timer-block {
+        border: 1px solid #e6eaef;
+        border-radius: 6px;
+        padding: 7px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .timer-display {
+        font-size: 22px;
+        line-height: 1;
+        font-weight: 700;
+        color: #1a3a5c;
+        letter-spacing: 0.04em;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+      .timer-display.running {
+        color: #2b6b2b;
+      }
+      .timer-display.paused {
+        color: #b35c00;
+      }
+
+      .timer-buttons {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+      }
+
+      .btn {
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .btn-start {
+        background: #2b6b2b;
+        color: #fff;
+      }
+      .btn-pause {
+        background: #b35c00;
+        color: #fff;
+      }
+      .btn-stop {
+        background: #b31b1b;
+        color: #fff;
+      }
+      .btn-reset {
+        background: #fff;
+        border: 1px solid #dde1e6;
+        color: #666;
+      }
+      .btn-submit {
+        width: 100%;
+        background: #1a3a5c;
+        color: #fff;
+        padding: 9px;
+      }
+
+      .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #555;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      input[type="text"],
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid #dde1e6;
+        border-radius: 6px;
+        padding: 7px 9px;
+        font-size: 13px;
+        font-family: inherit;
+        color: #1a1a1a;
+        background: #fff;
+      }
+      input[type="text"]:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: #4a86e8;
+        box-shadow: 0 0 0 2px rgba(74, 134, 232, 0.18);
+      }
+      textarea {
+        min-height: 66px;
+        resize: vertical;
+      }
+
+      .duration-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #inp-duration {
+        width: 118px;
+      }
+      .duration-hint {
+        font-size: 11px;
+        color: #80868b;
+      }
+
+      .new-task-row {
+        display: none;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 6px;
+        padding: 8px;
+        background: #f0f7ff;
+        border: 1px dashed #4a86e8;
+        border-radius: 6px;
+      }
+      .new-task-row.visible {
+        display: flex;
+      }
+
+      .status {
+        display: none;
+        font-size: 12px;
+        border-radius: 6px;
+        padding: 6px 8px;
+      }
+      .status.success {
+        display: block;
+        background: #e6f4ea;
+        color: #2b6b2b;
+        font-weight: 600;
+      }
+      .status.error {
+        display: block;
+        background: #fce8e6;
+        color: #b31b1b;
+        font-weight: 600;
+      }
+
+      .sidebar-actions {
+        display: flex;
+        gap: 6px;
+      }
+
+      .btn-secondary {
+        flex: 1;
+        background: #fff;
+        color: #1a3a5c;
+        border: 1px solid #d0d7de;
+      }
+
+      .btn-secondary:hover {
+        background: #f2f5f8;
+      }
+
+      .weekly-actions-zone {
+        margin-top: 2px;
+        padding-top: 8px;
+        border-top: 1px solid #e8ebef;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .weekly-actions-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: #1a3a5c;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="greeting">Bonjour Benjamin !</div>
+      <div class="date">Aujourd'hui : <span id="today-date">…</span></div>
+    </div>
+
+    <div class="body">
+      <div class="card">
+        <div class="section-title">TODO LIST</div>
+        <div class="todo-add">
+          <input type="text" id="inp-todo" placeholder="Ajouter une tâche prévue…" maxlength="160" />
+          <div class="todo-time">
+            <select id="todo-hours" aria-label="Heures prévues"></select>
+            <span class="sep">:</span>
+            <select id="todo-minutes" aria-label="Minutes prévues"></select>
+          </div>
+          <button class="mini-btn" onclick="addTodoItem()">Ajouter</button>
+        </div>
+        <div class="todo-list" id="todo-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Qu'as-tu fait aujourd'hui ?</div>
+
+        <div class="timer-block">
+          <div class="timer-display" id="timer-display">00:00:00</div>
+          <div class="timer-buttons">
+            <button class="btn btn-start" id="btn-start" onclick="timerStart()">▶</button>
+            <button class="btn btn-pause" id="btn-pause" onclick="timerPause()" disabled>⏸</button>
+            <button class="btn btn-stop" id="btn-stop" onclick="timerStop()" disabled>⏹</button>
+            <button class="btn btn-reset" id="btn-reset" onclick="timerReset()">↺</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="inp-duration">Durée</label>
+          <div class="duration-row">
+            <input type="text" id="inp-duration" value="00:00:00" placeholder="hh:mm:ss" maxlength="8" />
+            <span class="duration-hint">modifiable</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="sel-task">Tâche <span style="color: #b31b1b">*</span></label>
+          <select id="sel-task" onchange="onTaskChange()">
+            <option value="" disabled selected>Chargement des tâches…</option>
+          </select>
+          <div class="new-task-row" id="new-task-row">
+            <label for="inp-new-task">Nom de la nouvelle tâche</label>
+            <input type="text" id="inp-new-task" placeholder="ex. Préparer démo client" maxlength="120" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="inp-desc">Description</label>
+          <textarea id="inp-desc" placeholder="Détails, contexte…"></textarea>
+        </div>
+
+        <div class="status" id="status-msg"></div>
+        <button class="btn btn-submit" id="btn-submit" onclick="submitEntry()">✔ Enregistrer l'entrée</button>
+
+        <div class="weekly-actions-zone">
+          <div class="weekly-actions-title">Actions semaine</div>
+          <div class="sidebar-actions">
+            <button class="btn btn-secondary" id="btn-weekly-recap" onclick="runWeeklyRecap()">Récap semaine</button>
+            <button class="btn btn-secondary" id="btn-recalc" onclick="runRecalculateTotals()">
+              Recalculer totaux
+            </button>
+          </div>
+          <div class="status" id="status-weekly"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const NEW_TASK_SENTINEL = "__NEW_TASK__";
+      let taskOptionsCache = [];
+      let timerInterval = null;
+      let elapsedSeconds = 0;
+      let startTimestamp = null;
+      let timerState = "idle";
+
+      let todoItems = [];
+      let todoSaveTimeout = null;
+
+      function buildTodoTimeDropdowns() {
+        const hSel = document.getElementById("todo-hours");
+        const mSel = document.getElementById("todo-minutes");
+        hSel.innerHTML = "";
+        mSel.innerHTML = "";
+
+        for (let h = 0; h <= 12; h++) {
+          const opt = document.createElement("option");
+          opt.value = String(h);
+          opt.textContent = String(h).padStart(2, "0");
+          hSel.appendChild(opt);
+        }
+        for (let m = 0; m <= 55; m += 5) {
+          const opt = document.createElement("option");
+          opt.value = String(m);
+          opt.textContent = String(m).padStart(2, "0");
+          mSel.appendChild(opt);
+        }
+      }
+
+      function splitMinutes(totalMinutes) {
+        const safe = Math.max(0, parseInt(totalMinutes, 10) || 0);
+        return { hours: Math.floor(safe / 60), minutes: safe % 60 };
+      }
+
+      function updateDisplay(seconds) {
+        const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
+        const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+        const s = String(seconds % 60).padStart(2, "0");
+        const el = document.getElementById("timer-display");
+        el.textContent = `${h}:${m}:${s}`;
+        el.className =
+          "timer-display " + (timerState === "running" ? "running" : timerState === "paused" ? "paused" : "");
+      }
+
+      function timerTick() {
+        const diff = Math.floor((Date.now() - startTimestamp) / 1000);
+        const total = elapsedSeconds + diff;
+        updateDisplay(total);
+        const h = String(Math.floor(total / 3600)).padStart(2, "0");
+        const m = String(Math.floor((total % 3600) / 60)).padStart(2, "0");
+        const s = String(total % 60).padStart(2, "0");
+        document.getElementById("inp-duration").value = h + ":" + m + ":" + s;
+      }
+
+      function setTimerButtons() {
+        document.getElementById("btn-start").disabled = timerState === "running";
+        document.getElementById("btn-pause").disabled = timerState !== "running";
+        document.getElementById("btn-stop").disabled = timerState === "idle";
+      }
+
+      function timerStart() {
+        if (timerState === "running") return;
+        startTimestamp = Date.now();
+        timerInterval = setInterval(timerTick, 500);
+        timerState = "running";
+        setTimerButtons();
+      }
+
+      function timerPause() {
+        if (timerState !== "running") return;
+        clearInterval(timerInterval);
+        timerInterval = null;
+        elapsedSeconds += Math.floor((Date.now() - startTimestamp) / 1000);
+        startTimestamp = null;
+        timerState = "paused";
+        updateDisplay(elapsedSeconds);
+        setTimerButtons();
+      }
+
+      function timerStop() {
+        if (timerState === "idle") return;
+        clearInterval(timerInterval);
+        timerInterval = null;
+        if (timerState === "running") elapsedSeconds += Math.floor((Date.now() - startTimestamp) / 1000);
+        startTimestamp = null;
+        timerState = "idle";
+        updateDisplay(elapsedSeconds);
+        setTimerButtons();
+        const totalSec = elapsedSeconds;
+        const h = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+        const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+        const s = String(totalSec % 60).padStart(2, "0");
+        document.getElementById("inp-duration").value = h + ":" + m + ":" + s;
+      }
+
+      function timerReset() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        elapsedSeconds = 0;
+        startTimestamp = null;
+        timerState = "idle";
+        updateDisplay(0);
+        document.getElementById("inp-duration").value = "00:00:00";
+        setTimerButtons();
+      }
+
+      function onTaskChange() {
+        const isNew = document.getElementById("sel-task").value === NEW_TASK_SENTINEL;
+        document.getElementById("new-task-row").classList.toggle("visible", isNew);
+        if (isNew) document.getElementById("inp-new-task").focus();
+      }
+
+      function populateTasks(tasks) {
+        taskOptionsCache = Array.isArray(tasks) ? tasks.slice() : [];
+        const sel = document.getElementById("sel-task");
+        sel.innerHTML = "";
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        placeholder.textContent = tasks.length ? "Sélectionner une tâche…" : "Aucune tâche active — créez-en une";
+        sel.appendChild(placeholder);
+
+        tasks.forEach(function (name) {
+          const opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          sel.appendChild(opt);
+        });
+
+        const newOpt = document.createElement("option");
+        newOpt.value = NEW_TASK_SENTINEL;
+        newOpt.textContent = "➕ Nouvelle tâche…";
+        sel.appendChild(newOpt);
+      }
+
+      function renderTodoList() {
+        const host = document.getElementById("todo-list");
+        host.innerHTML = "";
+        todoItems.forEach(function (item, index) {
+          const row = document.createElement("div");
+          row.className = "todo-item" + (item.done ? " done" : "");
+
+          const chk = document.createElement("input");
+          chk.type = "checkbox";
+          chk.checked = item.done;
+          chk.onchange = function () {
+            todoItems[index].done = chk.checked;
+            renderTodoList();
+            queueTodoSave();
+          };
+
+          const text = document.createElement("div");
+          text.className = "todo-text";
+          text.textContent = item.text;
+
+          const timeWrap = document.createElement("div");
+          timeWrap.className = "todo-time";
+          const timeBadge = document.createElement("span");
+          timeBadge.className = "todo-time-badge";
+          const hSel = document.createElement("select");
+          const mSel = document.createElement("select");
+          const editor = document.createElement("div");
+          editor.className = "todo-time-editor";
+          const editBtn = document.createElement("button");
+          editBtn.className = "mini-btn";
+          editBtn.textContent = "✎";
+
+          const current = splitMinutes(item.plannedMinutes);
+          timeBadge.textContent = `${String(current.hours).padStart(2, "0")}:${String(current.minutes).padStart(2, "0")}`;
+          for (let h = 0; h <= 12; h++) {
+            const opt = document.createElement("option");
+            opt.value = String(h);
+            opt.textContent = String(h).padStart(2, "0");
+            if (h === current.hours) opt.selected = true;
+            hSel.appendChild(opt);
+          }
+          for (let m = 0; m <= 55; m += 5) {
+            const opt = document.createElement("option");
+            opt.value = String(m);
+            opt.textContent = String(m).padStart(2, "0");
+            if (m === current.minutes) opt.selected = true;
+            mSel.appendChild(opt);
+          }
+
+          const onTimeChange = function () {
+            const h = parseInt(hSel.value, 10) || 0;
+            const m = parseInt(mSel.value, 10) || 0;
+            todoItems[index].plannedMinutes = h * 60 + m;
+            timeBadge.textContent = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+            queueTodoSave();
+            editor.classList.remove("visible");
+            timeBadge.style.display = "inline-flex";
+            editBtn.style.display = "inline-flex";
+          };
+          hSel.onchange = onTimeChange;
+          mSel.onchange = onTimeChange;
+
+          editBtn.onclick = function () {
+            editor.classList.add("visible");
+            timeBadge.style.display = "none";
+            editBtn.style.display = "none";
+            hSel.focus();
+          };
+
+          const sep = document.createElement("span");
+          sep.className = "sep";
+          sep.textContent = ":";
+          editor.appendChild(hSel);
+          editor.appendChild(sep);
+          editor.appendChild(mSel);
+          timeWrap.appendChild(timeBadge);
+          timeWrap.appendChild(editBtn);
+          timeWrap.appendChild(editor);
+
+          const useBtn = document.createElement("button");
+          useBtn.className = "mini-btn";
+          useBtn.textContent = "Entrer";
+          useBtn.onclick = function () {
+            applyTodoToEntry(item.text);
+          };
+
+          const delBtn = document.createElement("button");
+          delBtn.className = "mini-btn";
+          delBtn.textContent = "✕";
+          delBtn.onclick = function () {
+            todoItems.splice(index, 1);
+            renderTodoList();
+            queueTodoSave();
+          };
+
+          const controls = document.createElement("div");
+          controls.className = "todo-controls";
+          controls.appendChild(timeWrap);
+          controls.appendChild(useBtn);
+          controls.appendChild(delBtn);
+
+          row.appendChild(chk);
+          row.appendChild(text);
+          row.appendChild(controls);
+          host.appendChild(row);
+        });
+      }
+
+      function addTodoItem() {
+        const input = document.getElementById("inp-todo");
+        const text = input.value.trim();
+        if (!text) return;
+        const h = parseInt(document.getElementById("todo-hours").value, 10) || 0;
+        const m = parseInt(document.getElementById("todo-minutes").value, 10) || 0;
+        todoItems.push({ text, done: false, plannedMinutes: h * 60 + m });
+        input.value = "";
+        renderTodoList();
+        queueTodoSave();
+      }
+
+      function queueTodoSave() {
+        clearTimeout(todoSaveTimeout);
+        todoSaveTimeout = setTimeout(function () {
+          google.script.run.saveDailyTodos({ items: todoItems });
+        }, 500);
+      }
+
+      function applyTodoToEntry(text) {
+        const sel = document.getElementById("sel-task");
+        const options = Array.from(sel.options).filter((o) => o.value && o.value !== NEW_TASK_SENTINEL && !o.disabled);
+        const match = options.find((o) => o.value.toLowerCase() === text.toLowerCase());
+
+        if (match) {
+          sel.value = match.value;
+          document.getElementById("new-task-row").classList.remove("visible");
+          document.getElementById("inp-new-task").value = "";
+        } else {
+          sel.value = NEW_TASK_SENTINEL;
+          document.getElementById("new-task-row").classList.add("visible");
+          document.getElementById("inp-new-task").value = text.slice(0, 120);
+        }
+
+        if (!document.getElementById("inp-desc").value.trim()) {
+          document.getElementById("inp-desc").value = text;
+        }
+      }
+
+      function submitEntry() {
+        const sel = document.getElementById("sel-task");
+        const isNew = sel.value === NEW_TASK_SENTINEL;
+        const newTaskName = document.getElementById("inp-new-task").value.trim();
+        const description = document.getElementById("inp-desc").value.trim();
+        const rawDuration = document.getElementById("inp-duration").value.trim();
+
+        let duration = rawDuration;
+        let totalSeconds = 0;
+        if (/^\d{1,2}:\d{2}:\d{2}$/.test(rawDuration)) {
+          const p = rawDuration.split(":");
+          totalSeconds = parseInt(p[0], 10) * 3600 + parseInt(p[1], 10) * 60 + parseInt(p[2], 10);
+          duration = p[0].padStart(2, "0") + ":" + p[1];
+        } else if (/^\d{1,2}:\d{2}$/.test(rawDuration)) {
+          const p = rawDuration.split(":");
+          totalSeconds = parseInt(p[0], 10) * 3600 + parseInt(p[1], 10) * 60;
+          duration = rawDuration;
+        }
+
+        if (totalSeconds < 60) {
+          showStatus("La durée doit être d'au moins 1 minute.", false);
+          return;
+        }
+        if (!sel.value) {
+          showStatus("Sélectionnez ou créez une tâche.", false);
+          return;
+        }
+        if (isNew && !newTaskName) {
+          showStatus("Entrez le nom de la nouvelle tâche.", false);
+          return;
+        }
+
+        const btn = document.getElementById("btn-submit");
+        btn.disabled = true;
+        btn.textContent = "…Enregistrement";
+        hideStatus();
+
+        if (isNew) {
+          google.script.run
+            .withSuccessHandler(function (result) {
+              if (!result.success) {
+                btn.disabled = false;
+                btn.textContent = "✔ Enregistrer l'entrée";
+                showStatus("Erreur création tâche.", false);
+                return;
+              }
+              addOptionToDropdown(result.name);
+              doLogEntry(result.name, description, duration, btn);
+            })
+            .withFailureHandler(function (err) {
+              btn.disabled = false;
+              btn.textContent = "✔ Enregistrer l'entrée";
+              showStatus("Erreur : " + err.message, false);
+            })
+            .addTask(newTaskName);
+        } else {
+          doLogEntry(sel.value, description, duration, btn);
+        }
+      }
+
+      function setWeeklyActionButtonsDisabled(disabled) {
+        document.getElementById("btn-weekly-recap").disabled = disabled;
+        document.getElementById("btn-recalc").disabled = disabled;
+      }
+
+      function runWeeklyRecap() {
+        setWeeklyActionButtonsDisabled(true);
+        hideWeeklyStatus();
+        google.script.run
+          .withSuccessHandler(function () {
+            setWeeklyActionButtonsDisabled(false);
+            showWeeklyStatus("Récapitulatif semaine généré ✓", true);
+          })
+          .withFailureHandler(function (err) {
+            setWeeklyActionButtonsDisabled(false);
+            showWeeklyStatus("Erreur récap : " + err.message, false);
+          })
+          .writeWeeklyRecap();
+      }
+
+      function runRecalculateTotals() {
+        setWeeklyActionButtonsDisabled(true);
+        hideWeeklyStatus();
+        google.script.run
+          .withSuccessHandler(function () {
+            setWeeklyActionButtonsDisabled(false);
+            showWeeklyStatus("Recalcul des totaux terminé ✓", true);
+          })
+          .withFailureHandler(function (err) {
+            setWeeklyActionButtonsDisabled(false);
+            showWeeklyStatus("Erreur recalcul : " + err.message, false);
+          })
+          .recalculateTotals();
+      }
+
+      function doLogEntry(title, description, duration, btn) {
+        google.script.run
+          .withSuccessHandler(function (result) {
+            btn.disabled = false;
+            btn.textContent = "✔ Enregistrer l'entrée";
+            if (result.success) {
+              showStatus(result.message, true);
+              clearForm();
+            } else {
+              showStatus("Erreur : " + result.message, false);
+            }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.textContent = "✔ Enregistrer l'entrée";
+            showStatus("Erreur : " + err.message, false);
+          })
+          .logEntry({ title, description, duration });
+      }
+
+      function addOptionToDropdown(name) {
+        const sel = document.getElementById("sel-task");
+        const newOpt = sel.querySelector('option[value="' + NEW_TASK_SENTINEL + '"]');
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        opt.selected = true;
+        sel.insertBefore(opt, newOpt);
+        if (!taskOptionsCache.includes(name)) taskOptionsCache.push(name);
+        document.getElementById("new-task-row").classList.remove("visible");
+        document.getElementById("inp-new-task").value = "";
+      }
+
+      function clearForm() {
+        document.getElementById("sel-task").selectedIndex = 0;
+        document.getElementById("new-task-row").classList.remove("visible");
+        document.getElementById("inp-new-task").value = "";
+        document.getElementById("inp-desc").value = "";
+      }
+
+      function showStatus(msg, success) {
+        const el = document.getElementById("status-msg");
+        el.textContent = msg;
+        el.className = "status " + (success ? "success" : "error");
+        if (success) setTimeout(hideStatus, 4000);
+      }
+
+      function hideStatus() {
+        const el = document.getElementById("status-msg");
+        el.textContent = "";
+        el.className = "status";
+      }
+
+      function showWeeklyStatus(msg, success) {
+        const el = document.getElementById("status-weekly");
+        el.textContent = msg;
+        el.className = "status " + (success ? "success" : "error");
+        if (success) setTimeout(hideWeeklyStatus, 4000);
+      }
+
+      function hideWeeklyStatus() {
+        const el = document.getElementById("status-weekly");
+        el.textContent = "";
+        el.className = "status";
+      }
+
+      document.getElementById("inp-todo").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addTodoItem();
+        }
+      });
+
+      google.script.run
+        .withSuccessHandler(function (dateStr) {
+          document.getElementById("today-date").textContent = dateStr;
+        })
+        .getTodayFrench();
+
+      google.script.run
+        .withSuccessHandler(populateTasks)
+        .withFailureHandler(function () {
+          populateTasks([]);
+        })
+        .getTasks();
+
+      google.script.run
+        .withSuccessHandler(function (data) {
+          todoItems =
+            data && Array.isArray(data.items)
+              ? data.items.map(function (item) {
+                  return {
+                    text: String(item && item.text ? item.text : "").trim(),
+                    done: !!(item && item.done),
+                    plannedMinutes: Math.max(0, parseInt(item && item.plannedMinutes, 10) || 0),
+                  };
+                })
+              : [];
+          renderTodoList();
+        })
+        .withFailureHandler(function () {
+          todoItems = [];
+          renderTodoList();
+        })
+        .getDailyTodos();
+
+      buildTodoTimeDropdowns();
+    </script>
+  </body>
+</html>
