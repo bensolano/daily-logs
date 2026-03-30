@@ -373,8 +373,8 @@
           <div class="timer-buttons">
             <button class="btn btn-start" id="btn-start" onclick="timerStart()">▶</button>
             <button class="btn btn-pause" id="btn-pause" onclick="timerPause()" disabled>⏸</button>
-            <button class="btn btn-stop" id="btn-stop" onclick="timerStop()" disabled>⏹</button>
-            <button class="btn btn-reset" id="btn-reset" onclick="timerReset()">↺</button>
+<!--             <button class="btn btn-stop" id="btn-stop" onclick="timerStop()" disabled>⏹</button>
+ -->            <button class="btn btn-reset" id="btn-reset" onclick="timerReset()">↺</button>
           </div>
         </div>
 
@@ -408,10 +408,10 @@
         <div class="weekly-actions-zone">
           <div class="weekly-actions-title">Actions semaine</div>
           <div class="sidebar-actions">
-            <button class="btn btn-secondary" id="btn-weekly-recap" onclick="runWeeklyRecap()">Récap semaine</button>
             <button class="btn btn-secondary" id="btn-recalc" onclick="runRecalculateTotals()">
               Recalculer totaux
             </button>
+            <button class="btn btn-secondary" id="btn-weekly-recap" onclick="runWeeklyRecap()">Récap semaine</button>
           </div>
           <div class="status" id="status-weekly"></div>
         </div>
@@ -499,7 +499,7 @@
         setTimerButtons();
       }
 
-      function timerStop() {
+/*       function timerStop() {
         if (timerState === "idle") return;
         clearInterval(timerInterval);
         timerInterval = null;
@@ -513,7 +513,7 @@
         const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
         const s = String(totalSec % 60).padStart(2, "0");
         document.getElementById("inp-duration").value = h + ":" + m + ":" + s;
-      }
+      } */
 
       function timerReset() {
         clearInterval(timerInterval);
